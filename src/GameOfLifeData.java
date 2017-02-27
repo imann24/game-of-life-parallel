@@ -4,8 +4,9 @@
  */
 
 public class GameOfLifeData {
+	public static final int DONE_FLAG = 1;
 	
-	public static String[] currentDish = {
+	public static String[] newDish = {
         "                                                                                  ",
         "   #                                                                              ",
         " # #                                            ###                               ",
@@ -18,7 +19,7 @@ public class GameOfLifeData {
         "                                                                                  "
     };
 	
-	public static String[] previousDish = {
+	public static String[] currDish = {
         "                                                                                  ",
         "   #                                                                              ",
         " # #                                            ###                               ",

@@ -39,11 +39,7 @@ public class GameOfLifeThread extends Thread {
 			try {
 				// Sends flag to the other thread to indicate it's done w/ generation
 				this.sendQueue.put(this.doneFlag);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			try {
-				// Waits for flag from other thread to indicate other thread is done w/ generation
+				this.sendQueue.put(this.doneFlag);
 				this.receiveQueue.take();
 			} catch (InterruptedException e) {
 				e.printStackTrace();

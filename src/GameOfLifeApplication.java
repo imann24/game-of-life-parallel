@@ -37,13 +37,22 @@ public class GameOfLifeApplication {
 		// Use "start" instead of "run" because "run" blocks the main thread
 		firstThread.start();
 		secondThread.start();
-		try {
-			firstThread.join();
-			secondThread.join();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+		for(int i = 0; i < numGen; i++) {
+			try {
+				firstThreadQueue.take();
+				secondThreadQueue.take();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			print(GameOfLifeData.newDish);
 		}
 		print(GameOfLifeData.newDish);
+//		try {
+//			firstThread.join();
+//			secondThread.join();
+//		} catch (InterruptedException e) {
+//			e.printStackTrace();
+//		}
 	}
 	
 	public static void print(String[] dish) {

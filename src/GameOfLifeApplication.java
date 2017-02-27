@@ -17,12 +17,17 @@ public class GameOfLifeApplication {
 		
 		BlockingQueue<Integer> firstThreadQueue = new ArrayBlockingQueue<Integer>(1);
 		BlockingQueue<Integer> secondThreadQueue = new ArrayBlockingQueue<Integer>(1);
+		
+		BlockingQueue<Integer> firstThreadManagerQueue = new ArrayBlockingQueue<Integer>(1);
+		BlockingQueue<Integer> secondThreadManagerQueue = new ArrayBlockingQueue<Integer>(1);
+		
 		int numRowsInDish = GameOfLifeData.newDish.length;
 		int middleRow = numRowsInDish / 2;
 		
 		GameOfLifeThread firstThread = new GameOfLifeThread(
 				secondThreadQueue, 
 				firstThreadQueue,
+				firstThreadManagerQueue,
 				0,
 				middleRow - 1,
 				numGen);
@@ -30,6 +35,7 @@ public class GameOfLifeApplication {
 		GameOfLifeThread secondThread = new GameOfLifeThread(
 				firstThreadQueue, 
 				secondThreadQueue,
+				secondThreadManagerQueue,
 				middleRow,
 				numRowsInDish - 1,
 				numGen);
@@ -39,20 +45,13 @@ public class GameOfLifeApplication {
 		secondThread.start();
 		for(int i = 0; i < numGen; i++) {
 			try {
-				firstThreadQueue.take();
-				secondThreadQueue.take();
+				firstThreadManagerQueue.take();
+				secondThreadManagerQueue.take();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 			print(GameOfLifeData.newDish);
 		}
-		print(GameOfLifeData.newDish);
-//		try {
-//			firstThread.join();
-//			secondThread.join();
-//		} catch (InterruptedException e) {
-//			e.printStackTrace();
-//		}
 	}
 	
 	public static void print(String[] dish) {

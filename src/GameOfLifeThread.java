@@ -6,9 +6,12 @@
 import java.util.concurrent.BlockingQueue;
 
 public class GameOfLifeThread extends Thread {
+	
 	BlockingQueue<Integer> sendQueue;
 	BlockingQueue<Integer> receiveQueue;
 
+	BlockingQueue<Integer> managerQueue;
+	
 	int firstRow;
 	int lastRow;
 	int numGen;
@@ -18,12 +21,17 @@ public class GameOfLifeThread extends Thread {
 	String[] newGen;
 	String[] currGen;
 
-	public GameOfLifeThread(BlockingQueue<Integer> send,
-			BlockingQueue<Integer> receive, int firstRow, int lastRow, int numGen) {
+	public GameOfLifeThread(
+			BlockingQueue<Integer> send,
+			BlockingQueue<Integer> receive,
+			BlockingQueue<Integer> manager,
+			int firstRow, int lastRow, int numGen) {
 
 		this.sendQueue = send;
 		this.receiveQueue = receive;
 
+		this.managerQueue = manager;
+		
 		this.firstRow = firstRow;
 		this.lastRow = lastRow;
 		this.numGen = numGen;
@@ -39,7 +47,7 @@ public class GameOfLifeThread extends Thread {
 			try {
 				// Sends flag to the other thread to indicate it's done w/ generation
 				this.sendQueue.put(this.doneFlag);
-				this.sendQueue.put(this.doneFlag);
+				this.managerQueue.put(this.doneFlag);
 				this.receiveQueue.take();
 			} catch (InterruptedException e) {
 				e.printStackTrace();

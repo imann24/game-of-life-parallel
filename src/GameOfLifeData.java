@@ -4,6 +4,8 @@
  */
 
 public class GameOfLifeData {
+
+	// Constant to use in the blocking queues
 	public static final int DONE_FLAG = 1;
 	
 	public static String[] newDish = {

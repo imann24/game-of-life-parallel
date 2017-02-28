@@ -10,22 +10,27 @@ public class GameOfLifeThread extends Thread {
 	BlockingQueue<Integer> sendQueue;
 	BlockingQueue<Integer> receiveQueue;
 
+	// used for printing out every generation
 	BlockingQueue<Integer> managerQueue;
 	
 	int firstRow;
 	int lastRow;
 	int numGen;
 	
+	// used by threads to communicate when they are done with each other
 	final int doneFlag = GameOfLifeData.DONE_FLAG; 
 	
 	String[] newGen;
 	String[] currGen;
 
+	boolean useManagerQueue;
+	
 	public GameOfLifeThread(
 			BlockingQueue<Integer> send,
 			BlockingQueue<Integer> receive,
 			BlockingQueue<Integer> manager,
-			int firstRow, int lastRow, int numGen) {
+			int firstRow, int lastRow, int numGen,
+			boolean useManager) {
 
 		this.sendQueue = send;
 		this.receiveQueue = receive;
@@ -38,6 +43,9 @@ public class GameOfLifeThread extends Thread {
 		
 		this.newGen = GameOfLifeData.newDish;
 		this.currGen = GameOfLifeData.currDish;
+		
+		// only used when printing out every generation
+		this.useManagerQueue = useManager;
 	}
 
 	@Override
@@ -47,7 +55,9 @@ public class GameOfLifeThread extends Thread {
 			try {
 				// Sends flag to the other thread to indicate it's done w/ generation
 				this.sendQueue.put(this.doneFlag);
-				this.managerQueue.put(this.doneFlag);
+				if(this.useManagerQueue) { // used when printing out every generation
+					this.managerQueue.put(this.doneFlag);
+				}
 				this.receiveQueue.take();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
@@ -56,12 +66,18 @@ public class GameOfLifeThread extends Thread {
 		}
 	}
 
+	/**
+	 * Updates dish with new generation
+	 * */
 	void switchArrayPointers () {
 		String[] temp = this.newGen;
 		this.newGen = this.currGen;
 		this.currGen = temp;
 	}
 	
+	/**
+	 * Adapted from Dominique Thiebaut's serial Java code
+	 */
 	void calculateNextGeneration() {
 		for (int row = this.firstRow; row <= this.lastRow; row++) {// each row
 			newGen[row] = "";
@@ -107,8 +123,6 @@ public class GameOfLifeThread extends Thread {
 						newGen[row] += " ";
 
 			}
-		}
-		
+		}	
 	}
-
 }

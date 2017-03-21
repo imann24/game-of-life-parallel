@@ -11,17 +11,64 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 public class GameOfLifeApplication {
-
+	static final int REQ_NUM_ARGS = 3;
+	
+	// If passing args via command line, should be in the order: {dishFileName, numThreads, numGen}
 	public static void main(String[] args) {
-		// Prompts the user for the text file name
-		System.out.print("Please enter the name of the dish file in .txt format: ");
-		
-		// Read in the text file name
-		// Keep the keyboard scanner open to use for later number input
-		Scanner keyboard = new Scanner(System.in);
-		String dishFileName = keyboard.nextLine();
-		
+		String dishFileName;
+		int numThreads;
+		int numGen;
+		if(args.length == REQ_NUM_ARGS) {
+			dishFileName = args[0];
+			numThreads = Integer.parseInt(args[1]);
+			numGen = Integer.parseInt(args[2]);
+		} else {
+			// Prompts the user for the text file name
+			System.out.print("Please enter the name of the dish file in .txt format: ");
+			
+			// Read in the text file name
+			// Keep the keyboard scanner open to use for later number input
+			Scanner keyboard = new Scanner(System.in);
+			dishFileName = keyboard.nextLine();
+
+			// Prompt to user to enter a number of generations
+			promptUserForNumber(false, "generations");
+			String numGenStr = "";
+			while(keyboard.hasNextLine()) {
+				numGenStr = keyboard.nextLine();
+				// Error checking in case user has not entered an int
+				if(isInt(numGenStr)) {
+					break;
+				} else {
+					// Prompt to user to enter a valid number
+					promptUserForNumber(true, "generations");
+				}
+			}
+			// Read in number of generations to run program for from keyboard
+			numGen = Integer.parseInt(numGenStr);
+			
+			// Read in number of threads
+			promptUserForNumber(false, "threads");
+			String numThreadsStr = "";
+			while(keyboard.hasNextLine()) {
+				numThreadsStr = keyboard.nextLine();
+				// Error checking in case user has not entered an int
+				if(isInt(numThreadsStr)) {
+					break;
+				} else {
+					// Prompt to user to enter a valid number
+					promptUserForNumber(true, "threads");
+				}
+			}
+			// Read in number of threads to run program with from keyboard
+			numThreads = Integer.parseInt(numThreadsStr);
+
+			// Garbage Collection on the keyboard scanner
+			keyboard.close();
+			
+		}
 		File file = new File(dishFileName);
+		
 	  	// Use an ArrayList because the file line count is not known
 		ArrayList<String> mutableDish = new ArrayList<String>();
 	  	
@@ -42,42 +89,6 @@ public class GameOfLifeApplication {
 	    // Creates two arrays (cloned from the text file)
 	    String[] newDish = mutableDish.toArray(new String[size]);
 		String[] currDish = mutableDish.toArray(new String[size]);
-
-		// Prompt to user to enter a number of generations
-		promptUserForNumber(false, "generations");
-		String numGenStr = "";
-		while(keyboard.hasNextLine()) {
-			numGenStr = keyboard.nextLine();
-			// Error checking in case user has not entered an int
-			if(isInt(numGenStr)) {
-				break;
-			} else {
-				// Prompt to user to enter a valid number
-				promptUserForNumber(true, "generations");
-			}
-		}
-		// Read in number of generations to run program for from keyboard
-		int numGen = Integer.parseInt(numGenStr);
-		
-		// Read in number of threads
-		promptUserForNumber(false, "threads");
-		String numThreadsStr = "";
-		while(keyboard.hasNextLine()) {
-			numThreadsStr = keyboard.nextLine();
-			// Error checking in case user has not entered an int
-			if(isInt(numThreadsStr)) {
-				break;
-			} else {
-				// Prompt to user to enter a valid number
-				promptUserForNumber(true, "threads");
-			}
-		}
-		// Read in number of threads to run program with from keyboard
-		int numThreads = Integer.parseInt(numThreadsStr);
-
-		// Garbage Collection on the keyboard scanner
-		keyboard.close();
-		
 		// Collections used to synchronize threads 
 		ArrayList<Long> threadIds = new ArrayList<Long>(numThreads);
 		HashMap<Long, BlockingQueue<Long>> lookup = 

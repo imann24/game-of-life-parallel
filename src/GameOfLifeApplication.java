@@ -5,7 +5,6 @@
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,24 +13,36 @@ import java.util.Scanner;
 public class GameOfLifeApplication {
 
 	public static void main(String[] args) {
-		Scanner keyboard = new Scanner(System.in);
+		// Prompts the user for the text file name
 		System.out.print("Please enter the name of the dish file in .txt format: ");
+		
+		// Read in the text file name
+		// Keep the keyboard scanner open to use for later number input
+		Scanner keyboard = new Scanner(System.in);
 		String dishFileName = keyboard.nextLine();
+		
 		File file = new File(dishFileName);
-	  	ArrayList<String> mutableDish = new ArrayList<String>();
-	    try {
+	  	// Use an ArrayList because the file line count is not known
+		ArrayList<String> mutableDish = new ArrayList<String>();
+	  	
+		// Parse the file line by line
+	  	try {
 	        Scanner sc = new Scanner(file);
 	        while (sc.hasNextLine()) {
 	            mutableDish.add(sc.nextLine());
 	        }
 	        sc.close();
-	    } 
-	    catch (FileNotFoundException e) {
+	    } catch(FileNotFoundException e) {
 	        e.printStackTrace();
 	    }
+	    
+	    // Memoize this value to prevent recalling the method twice
 	    int size = mutableDish.size();
-		String[] newDish = mutableDish.toArray(new String[size]);
+		
+	    // Creates two arrays (cloned from the text file)
+	    String[] newDish = mutableDish.toArray(new String[size]);
 		String[] currDish = mutableDish.toArray(new String[size]);
+
 		// Prompt to user to enter a number of generations
 		promptUserForNumber(false, "generations");
 		String numGenStr = "";
@@ -47,6 +58,8 @@ public class GameOfLifeApplication {
 		}
 		// Read in number of generations to run program for from keyboard
 		int numGen = Integer.parseInt(numGenStr);
+		
+		// Read in number of threads
 		promptUserForNumber(false, "threads");
 		String numThreadsStr = "";
 		while(keyboard.hasNextLine()) {
@@ -59,17 +72,20 @@ public class GameOfLifeApplication {
 				promptUserForNumber(true, "threads");
 			}
 		}
-		// Read in number of generations to run program for from keyboard
+		// Read in number of threads to run program with from keyboard
 		int numThreads = Integer.parseInt(numThreadsStr);
+
+		// Garbage Collection on the keyboard scanner
+		keyboard.close();
 		
+		// Collections used to synchronize threads 
 		ArrayList<Long> threadIds = new ArrayList<Long>(numThreads);
 		HashMap<Long, BlockingQueue<Long>> lookup = 
 				new HashMap<Long, BlockingQueue<Long>>();
-		// Breaking up the dish for threads
-		int numRowsInDish = currDish.length;
-		int middleRow = numRowsInDish / 2;
 		
 		GameOfLifeThread[] threads = new GameOfLifeThread[numThreads];
+		
+		// Creates an array of threads
 		for(int i = 0; i < numThreads; i++) {
 			threads[i] = createThread(
 				numThreads,
@@ -82,9 +98,13 @@ public class GameOfLifeApplication {
 				currDish
 			);
 		}
+		
+		// Starts all the threads 
 		for (int i = 0; i < numThreads; i++) {
 			threads[i].start();
 		}
+		
+		// Runs the print loop while all threads are still alive
 		while(allThreadAlive(threadIds, numThreads)) {
 			clearScreen();
 			print(currDish);
@@ -96,27 +116,34 @@ public class GameOfLifeApplication {
 				e.printStackTrace();
 			}
 		}
+		
+		// Raises a kill flag inside each thread once one has terminated (to avoid deadlock)
 		killAllThreads(threads);
 	}
 
 	static void killAllThreads(GameOfLifeThread[] threads) {
 		for(GameOfLifeThread t : threads) {
+			// Raises a boolean flag
 			t.kill();
 		}
 	}
 	
+	// threadIds only stores a list of alive thread ids
 	static boolean allThreadAlive(ArrayList<Long> threadIds, int totalThreads) {
 		return threadIds.size() == totalThreads;
 	}
 	
+	// Gets the start index for a thread (within the rows of the dish)
 	static int getStart(int index, int numThreads, int height) {
 		return index / numThreads * height;
 	}
-	
+
+	// Gets the end index for a thread (within the rows of the dish)
 	static int getEnd(int index, int numThreads, int height) {
 		return (index + 1) / numThreads * height - 1;
 	}
 	
+	// Wrapper function for the thread constructor
 	static GameOfLifeThread createThread (
 		int numThreads, ArrayList<Long> threadIds,
 		HashMap<Long, BlockingQueue<Long>> lookup,
@@ -133,6 +160,7 @@ public class GameOfLifeApplication {
 				currDish);
 	}
 	
+	// Prints out a prompt to get number input from the command line 
 	static void promptUserForNumber (boolean isRepeat, String key) {
 		// Prompt to user
 		System.out.println();
@@ -143,6 +171,7 @@ public class GameOfLifeApplication {
 		}
 	}
 	
+	//Checks whether a String can be correctly parsed into an int
 	static boolean isInt(String str)   {  
 	  try   {  
 	    Integer.parseInt(str);	  
@@ -153,12 +182,14 @@ public class GameOfLifeApplication {
 	  }    
 	}
 	
+	// Prints out the whole dish
 	static void print(String[] dish) {
 		for(String s: dish) {
 		    System.out.println(s);
 	    }
 	}
 
+	// NOTE: Only works properly in command line. Clears the console
     static void clearScreen () {
     		final String ANSI_CLS = "\u001b[2J";
         final String ANSI_HOME = "\u001b[H";

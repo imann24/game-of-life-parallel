@@ -3,14 +3,34 @@
  * Description: Runs the game of life in parallel
  */
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class GameOfLifeApplication {
 
 	public static void main(String[] args) {
 		Scanner keyboard = new Scanner(System.in);
+		System.out.print("Please enter the name of the dish file in .txt format: ");
+		String dishFileName = keyboard.nextLine();
+		File file = new File(dishFileName);
+	  	ArrayList<String> mutableDish = new ArrayList<String>();
+	    try {
+	        Scanner sc = new Scanner(file);
+	        while (sc.hasNextLine()) {
+	            mutableDish.add(sc.nextLine());
+	        }
+	        sc.close();
+	    } 
+	    catch (FileNotFoundException e) {
+	        e.printStackTrace();
+	    }
+	    int size = mutableDish.size();
+		String[] newDish = mutableDish.toArray(new String[size]);
+		String[] currDish = mutableDish.toArray(new String[size]);
 		// Prompt to user to enter a number of generations
 		promptUserForNumber(false);
 		String numGenStr = "";
@@ -31,7 +51,7 @@ public class GameOfLifeApplication {
 		BlockingQueue<Integer> secondThreadQueue = new ArrayBlockingQueue<Integer>(1);
 		
 		// Breaking up the dish for threads
-		int numRowsInDish = GameOfLifeData.newDish.length;
+		int numRowsInDish = currDish.length;
 		int middleRow = numRowsInDish / 2;
 		
 		GameOfLifeThread firstThread = new GameOfLifeThread(
@@ -39,21 +59,25 @@ public class GameOfLifeApplication {
 				firstThreadQueue,
 				0,
 				middleRow - 1,
-				numGen);
+				numGen,
+				newDish,
+				currDish);
 		
 		GameOfLifeThread secondThread = new GameOfLifeThread(
 				firstThreadQueue, 
 				secondThreadQueue,
 				middleRow,
 				numRowsInDish - 1,
-				numGen);
+				numGen,
+				newDish,
+				currDish);
 		
 		// Use "start" instead of "run" because "run" blocks the main thread
 		firstThread.start();
 		secondThread.start();
 		while(firstThread.isAlive() || secondThread.isAlive()) {
 			clearScreen();
-			print(GameOfLifeData.currDish);
+			print(currDish);
 			try {
 				// guarantees that one generation is not printed twice
 				// gives time for next generation to be computed

@@ -9,30 +9,4 @@ public class GameOfLifeData {
 	public static final int DONE_FLAG = 1;
 	public static final long CONSOLE_DELAY = 10;
 	
-	public static String[] newDish = {
-        "                                                                                  ",
-        "   #                                                                              ",
-        " # #                                            ###                               ",
-        "  ##                                                                              ",
-        "                                                                                  ",
-        "                                                      #                           ",
-        "                                                    # #                           ",
-        "                                                     ##                           ",
-        "                                                                                  ",
-        "                                                                                  "
-    };
-	
-	public static String[] currDish = {
-        "                                                                                  ",
-        "   #                                                                              ",
-        " # #                                            ###                               ",
-        "  ##                                                                              ",
-        "                                                                                  ",
-        "                                                      #                           ",
-        "                                                    # #                           ",
-        "                                                     ##                           ",
-        "                                                                                  ",
-        "                                                                                  "
-    };
-	
 }

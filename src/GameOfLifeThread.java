@@ -23,7 +23,8 @@ public class GameOfLifeThread extends Thread {
 	public GameOfLifeThread(
 			BlockingQueue<Integer> send,
 			BlockingQueue<Integer> receive,
-			int firstRow, int lastRow, int numGen) {
+			int firstRow, int lastRow, int numGen,
+			String[] newGen, String[] currGen) {
 
 		this.sendQueue = send;
 		this.receiveQueue = receive;
@@ -32,8 +33,8 @@ public class GameOfLifeThread extends Thread {
 		this.lastRow = lastRow;
 		this.numGen = numGen;
 		
-		this.newGen = GameOfLifeData.newDish;
-		this.currGen = GameOfLifeData.currDish;
+		this.newGen = newGen;
+		this.currGen = currGen;
 	}
 
 	@Override

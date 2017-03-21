@@ -13,15 +13,19 @@ import java.util.Scanner;
 public class GameOfLifeApplication {
 	static final int REQ_NUM_ARGS = 3;
 	
-	// If passing args via command line, should be in the order: {dishFileName, numThreads, numGen}
+	// If passing args via command line, should be in the order: {dishFileName, numThreads, numGen, shouldPrint}
 	public static void main(String[] args) {
 		String dishFileName;
 		int numThreads;
 		int numGen;
-		if(args.length == REQ_NUM_ARGS) {
+		boolean shouldPrint = true;
+		if(args.length >= REQ_NUM_ARGS) {
 			dishFileName = args[0];
 			numThreads = Integer.parseInt(args[1]);
 			numGen = Integer.parseInt(args[2]);
+			if(args.length > REQ_NUM_ARGS) {
+				shouldPrint = Boolean.parseBoolean(args[3]);
+			}
 		} else {
 			// Prompts the user for the text file name
 			System.out.print("Please enter the name of the dish file in .txt format: ");
@@ -117,8 +121,10 @@ public class GameOfLifeApplication {
 		
 		// Runs the print loop while all threads are still alive
 		while(allThreadAlive(threadIds, numThreads)) {
-			clearScreen();
-			print(currDish);
+			if(shouldPrint) {
+				clearScreen();
+				print(currDish);
+			}
 			try {
 				// guarantees that one generation is not printed twice
 				// gives time for next generation to be computed

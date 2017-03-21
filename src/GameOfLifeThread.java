@@ -75,6 +75,7 @@ public class GameOfLifeThread extends Thread {
 	// Public mutator to set the killFlag, which effectively ends the run() method
 	public void kill() {
 		this.killFlag = true;
+		interrupt();
 	}
 	
 	// A universal indicator of whether this thread is still actively involved in calculations
@@ -109,8 +110,8 @@ public class GameOfLifeThread extends Thread {
 				workerQueue.take();
 				flagsReceived++;
 			}
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+		} catch(Exception e) {
+			cleanup();
 		}
 	}
 	

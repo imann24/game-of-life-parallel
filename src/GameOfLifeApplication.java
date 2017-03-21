@@ -32,7 +32,7 @@ public class GameOfLifeApplication {
 		String[] newDish = mutableDish.toArray(new String[size]);
 		String[] currDish = mutableDish.toArray(new String[size]);
 		// Prompt to user to enter a number of generations
-		promptUserForNumber(false);
+		promptUserForNumber(false, "generations");
 		String numGenStr = "";
 		while(keyboard.hasNextLine()) {
 			numGenStr = keyboard.nextLine();
@@ -41,12 +41,26 @@ public class GameOfLifeApplication {
 				break;
 			} else {
 				// Prompt to user to enter a valid number
-				promptUserForNumber(true);
+				promptUserForNumber(true, "generations");
 			}
 		}
 		// Read in number of generations to run program for from keyboard
 		int numGen = Integer.parseInt(numGenStr);
-		
+		promptUserForNumber(false, "threads");
+		String numThreadsStr = "";
+		while(keyboard.hasNextLine()) {
+			numThreadsStr = keyboard.nextLine();
+			// Error checking in case user has not entered an int
+			if(isInt(numThreadsStr)) {
+				break;
+			} else {
+				// Prompt to user to enter a valid number
+				promptUserForNumber(true, "threads");
+			}
+		}
+		// Read in number of generations to run program for from keyboard
+		int numThreads = Integer.parseInt(numThreadsStr);
+		System.out.println(numThreads);
 		BlockingQueue<Integer> firstThreadQueue = new ArrayBlockingQueue<Integer>(1);
 		BlockingQueue<Integer> secondThreadQueue = new ArrayBlockingQueue<Integer>(1);
 		
@@ -88,13 +102,13 @@ public class GameOfLifeApplication {
 		}
 	}
 	
-	static void promptUserForNumber (boolean isRepeat) {
+	static void promptUserForNumber (boolean isRepeat, String key) {
 		// Prompt to user
 		System.out.println();
 		if(isRepeat) {
-			System.out.print("Please enter a valid number for number of generations  ");
+			System.out.print("Please enter a valid number for number of " + key + ": ");
 		} else {
-			System.out.print("How many generations should the program run?  ");
+			System.out.print("How many " + key + " should the program run? ");
 		}
 	}
 	

@@ -9,9 +9,6 @@ public class GameOfLifeThread extends Thread {
 	
 	BlockingQueue<Integer> sendQueue;
 	BlockingQueue<Integer> receiveQueue;
-
-	// used for printing out every generation
-	BlockingQueue<Integer> managerQueue;
 	
 	int firstRow;
 	int lastRow;
@@ -22,20 +19,14 @@ public class GameOfLifeThread extends Thread {
 	
 	String[] newGen;
 	String[] currGen;
-
-	boolean useManagerQueue;
 	
 	public GameOfLifeThread(
 			BlockingQueue<Integer> send,
 			BlockingQueue<Integer> receive,
-			BlockingQueue<Integer> manager,
-			int firstRow, int lastRow, int numGen,
-			boolean useManager) {
+			int firstRow, int lastRow, int numGen) {
 
 		this.sendQueue = send;
 		this.receiveQueue = receive;
-
-		this.managerQueue = manager;
 		
 		this.firstRow = firstRow;
 		this.lastRow = lastRow;
@@ -43,29 +34,30 @@ public class GameOfLifeThread extends Thread {
 		
 		this.newGen = GameOfLifeData.newDish;
 		this.currGen = GameOfLifeData.currDish;
-		
-		// only used when printing out every generation
-		this.useManagerQueue = useManager;
 	}
 
 	@Override
 	public void run() {
 		for(int i = 0; i < this.numGen; i++) {
 			calculateNextGeneration();
-			try {
-				// Sends flag to the other thread to indicate it's done w/ generation
-				this.sendQueue.put(this.doneFlag);
-				if(this.useManagerQueue) { // used when printing out every generation
-					this.managerQueue.put(this.doneFlag);
-				}
-				this.receiveQueue.take();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+			// Sync calculating generations
+			synchronize();
 			switchArrayPointers();
+			// Sync swapping references to arrays (updated to new generation)
+			synchronize();
 		}
 	}
 
+	void synchronize () {
+		try {
+			// Sends flag to the other thread to indicate it's done w/ generation
+			this.sendQueue.put(this.doneFlag);
+			this.receiveQueue.take();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	/**
 	 * Updates dish with new generation
 	 * */

@@ -11,28 +11,24 @@ public class GameOfLifeApplication {
 
 	public static void main(String[] args) {
 		Scanner keyboard = new Scanner(System.in);
-		// Prompt to user
-		System.out.print("How many generations should the program run?  ");
-		// Read in number of generations to run program for from keyboard
-		int numGen = keyboard.nextInt();
-		
-		// Determines whether program prints every generation
-		boolean printEveryGen = false;
-		String response = keyboard.nextLine();
-		while(!(response.equals("y") || response.equals("n"))) {
-			System.out.print("Print every generation (y/n)?  ");
-			response = keyboard.nextLine();
+		// Prompt to user to enter a number of generations
+		promptUserForNumber(false);
+		String numGenStr = "";
+		while(keyboard.hasNextLine()) {
+			numGenStr = keyboard.nextLine();
+			// Error checking in case user has not entered an int
+			if(isInt(numGenStr)) {
+				break;
+			} else {
+				// Prompt to user to enter a valid number
+				promptUserForNumber(true);
+			}
 		}
-		if(response.equals("y")) {
-			printEveryGen = true;
-		}		
+		// Read in number of generations to run program for from keyboard
+		int numGen = Integer.parseInt(numGenStr);
 		
 		BlockingQueue<Integer> firstThreadQueue = new ArrayBlockingQueue<Integer>(1);
 		BlockingQueue<Integer> secondThreadQueue = new ArrayBlockingQueue<Integer>(1);
-		
-		// Controls when the manager prints (if printing every generation)
-		BlockingQueue<Integer> firstThreadManagerQueue = new ArrayBlockingQueue<Integer>(1);
-		BlockingQueue<Integer> secondThreadManagerQueue = new ArrayBlockingQueue<Integer>(1);
 		
 		// Breaking up the dish for threads
 		int numRowsInDish = GameOfLifeData.newDish.length;
@@ -41,49 +37,65 @@ public class GameOfLifeApplication {
 		GameOfLifeThread firstThread = new GameOfLifeThread(
 				secondThreadQueue, 
 				firstThreadQueue,
-				firstThreadManagerQueue,
 				0,
 				middleRow - 1,
-				numGen,
-				printEveryGen);
+				numGen);
 		
 		GameOfLifeThread secondThread = new GameOfLifeThread(
 				firstThreadQueue, 
 				secondThreadQueue,
-				secondThreadManagerQueue,
 				middleRow,
 				numRowsInDish - 1,
-				numGen,
-				printEveryGen);
+				numGen);
 		
 		// Use "start" instead of "run" because "run" blocks the main thread
 		firstThread.start();
 		secondThread.start();
-		if(printEveryGen) {  // CASE A: Synchronized printing
-			for(int i = 0; i < numGen; i++) {
-				try {
-					firstThreadManagerQueue.take();
-					secondThreadManagerQueue.take();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				print(GameOfLifeData.newDish);
-			}
-		} else { // CASE B: Printing last generation
+		while(firstThread.isAlive() || secondThread.isAlive()) {
+			clearScreen();
+			print(GameOfLifeData.currDish);
 			try {
-				firstThread.join();
-				secondThread.join();
+				// guarantees that one generation is not printed twice
+				// gives time for next generation to be computed
+				Thread.sleep(GameOfLifeData.CONSOLE_DELAY);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			print(GameOfLifeData.newDish);
 		}
 	}
 	
-	public static void print(String[] dish) {
+	static void promptUserForNumber (boolean isRepeat) {
+		// Prompt to user
+		System.out.println();
+		if(isRepeat) {
+			System.out.print("Please enter a valid number for number of generations  ");
+		} else {
+			System.out.print("How many generations should the program run?  ");
+		}
+	}
+	
+	static boolean isInt(String str)   {  
+	  try   {  
+	    Integer.parseInt(str);	  
+	    return true;  
+	  }  
+	  catch(NumberFormatException nfe) {  
+	    return false;  
+	  }    
+	}
+	
+	static void print(String[] dish) {
 		for(String s: dish) {
 		    System.out.println(s);
 	    }
 	}
+
+    static void clearScreen () {
+    		final String ANSI_CLS = "\u001b[2J";
+        final String ANSI_HOME = "\u001b[H";
+        System.out.print(ANSI_CLS + ANSI_HOME);
+        System.out.print(ANSI_HOME);
+        System.out.flush();
+    }
 
 }

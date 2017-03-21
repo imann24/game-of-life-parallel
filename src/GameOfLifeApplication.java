@@ -85,7 +85,7 @@ public class GameOfLifeApplication {
 		for (int i = 0; i < numThreads; i++) {
 			threads[i].start();
 		}
-		while(anyThreadAlive(threads)) {
+		while(allThreadAlive(threadIds, numThreads)) {
 			clearScreen();
 			print(currDish);
 			try {
@@ -96,15 +96,17 @@ public class GameOfLifeApplication {
 				e.printStackTrace();
 			}
 		}
+		killAllThreads(threads);
 	}
 
-	static boolean anyThreadAlive(GameOfLifeThread[] threads) {
+	static void killAllThreads(GameOfLifeThread[] threads) {
 		for(GameOfLifeThread t : threads) {
-			if(t.isAlive()) {
-				return true;
-			}
+			t.kill();
 		}
-		return false;
+	}
+	
+	static boolean allThreadAlive(ArrayList<Long> threadIds, int totalThreads) {
+		return threadIds.size() == totalThreads;
 	}
 	
 	static int getStart(int index, int numThreads, int height) {

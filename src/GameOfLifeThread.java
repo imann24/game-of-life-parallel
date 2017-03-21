@@ -23,6 +23,8 @@ public class GameOfLifeThread extends Thread {
 	String[] newGen;
 	String[] currGen;
 	
+	boolean killFlag = false;
+	
 	public GameOfLifeThread(
 			int numThreads, ArrayList<Long> threadIds,
 			HashMap<Long, BlockingQueue<Long>> lookup,
@@ -46,6 +48,9 @@ public class GameOfLifeThread extends Thread {
 	@Override
 	public void run() {
 		for(int i = 0; i < this.numGen; i++) {
+			if(killFlag) {
+				break;
+			}
 			calculateNextGeneration();
 			// Sync calculating generations
 			synchronize();
@@ -53,18 +58,39 @@ public class GameOfLifeThread extends Thread {
 			// Sync swapping references to arrays (updated to new generation)
 			synchronize();
 		}
+		cleanup();
 	}
 
+	public void kill() {
+		this.killFlag = true;
+	}
+	
+	void cleanup () {
+		this.threadIds.remove(getId());
+		this.lookup.remove(getId());
+	}
+	
 	void synchronize () {
+		if(killFlag) {
+			return;
+		}
 		try {
 			// Sends flag to the other thread to indicate it's done w/ generation
 			for(Long id : this.threadIds) {
-				lookup.get(id).put(this.getId());
+				if(!lookup.get(id).contains(this.getId())) {
+					if(killFlag) {
+						return;
+					}
+					lookup.get(id).put(this.getId());
+				}
 			}
-			ArrayList<Long> remainingIds = new ArrayList<Long>(this.threadIds);
-			while(!remainingIds.isEmpty()) {
-				Long id = workerQueue.take();
-				remainingIds.remove(id);
+			int flagsReceived = 0;
+			while(flagsReceived < this.threadIds.size()) {
+				if(killFlag) {
+					return;
+				}
+				workerQueue.take();
+				flagsReceived++;
 			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();

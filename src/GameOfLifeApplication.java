@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 
 public class GameOfLifeApplication {
@@ -60,36 +61,31 @@ public class GameOfLifeApplication {
 		}
 		// Read in number of generations to run program for from keyboard
 		int numThreads = Integer.parseInt(numThreadsStr);
-		System.out.println(numThreads);
-		BlockingQueue<Integer> firstThreadQueue = new ArrayBlockingQueue<Integer>(1);
-		BlockingQueue<Integer> secondThreadQueue = new ArrayBlockingQueue<Integer>(1);
 		
+		ArrayList<Long> threadIds = new ArrayList<Long>(numThreads);
+		HashMap<Long, BlockingQueue<Long>> lookup = 
+				new HashMap<Long, BlockingQueue<Long>>();
 		// Breaking up the dish for threads
 		int numRowsInDish = currDish.length;
 		int middleRow = numRowsInDish / 2;
 		
-		GameOfLifeThread firstThread = new GameOfLifeThread(
-				secondThreadQueue, 
-				firstThreadQueue,
-				0,
-				middleRow - 1,
+		GameOfLifeThread[] threads = new GameOfLifeThread[numThreads];
+		for(int i = 0; i < numThreads; i++) {
+			threads[i] = createThread(
+				numThreads,
+				threadIds,
+				lookup,
+				getStart(i, numThreads, currDish.length),
+				getEnd(i, numThreads, currDish.length),
 				numGen,
 				newDish,
-				currDish);
-		
-		GameOfLifeThread secondThread = new GameOfLifeThread(
-				firstThreadQueue, 
-				secondThreadQueue,
-				middleRow,
-				numRowsInDish - 1,
-				numGen,
-				newDish,
-				currDish);
-		
-		// Use "start" instead of "run" because "run" blocks the main thread
-		firstThread.start();
-		secondThread.start();
-		while(firstThread.isAlive() || secondThread.isAlive()) {
+				currDish
+			);
+		}
+		for (int i = 0; i < numThreads; i++) {
+			threads[i].start();
+		}
+		while(anyThreadAlive(threads)) {
 			clearScreen();
 			print(currDish);
 			try {
@@ -100,6 +96,39 @@ public class GameOfLifeApplication {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	static boolean anyThreadAlive(GameOfLifeThread[] threads) {
+		for(GameOfLifeThread t : threads) {
+			if(t.isAlive()) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	static int getStart(int index, int numThreads, int height) {
+		return index / numThreads * height;
+	}
+	
+	static int getEnd(int index, int numThreads, int height) {
+		return (index + 1) / numThreads * height - 1;
+	}
+	
+	static GameOfLifeThread createThread (
+		int numThreads, ArrayList<Long> threadIds,
+		HashMap<Long, BlockingQueue<Long>> lookup,
+		int firstRow, int lastRow, int numGen,
+		String[] newDish, String[] currDish) {
+		return new GameOfLifeThread(
+				numThreads,
+				threadIds,
+				lookup,
+				firstRow,
+				lastRow,
+				numGen,
+				newDish,
+				currDish);
 	}
 	
 	static void promptUserForNumber (boolean isRepeat, String key) {

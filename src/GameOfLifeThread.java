@@ -3,12 +3,15 @@
  * Description: A single thread to work on the blocking queues
  */
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 public class GameOfLifeThread extends Thread {
-	
-	BlockingQueue<Integer> sendQueue;
-	BlockingQueue<Integer> receiveQueue;
+	ArrayList<Long> threadIds;
+	HashMap<Long, BlockingQueue<Long>> lookup;
+	BlockingQueue<Long> workerQueue;
 	
 	int firstRow;
 	int lastRow;
@@ -21,13 +24,16 @@ public class GameOfLifeThread extends Thread {
 	String[] currGen;
 	
 	public GameOfLifeThread(
-			BlockingQueue<Integer> send,
-			BlockingQueue<Integer> receive,
+			int numThreads, ArrayList<Long> threadIds,
+			HashMap<Long, BlockingQueue<Long>> lookup,
 			int firstRow, int lastRow, int numGen,
 			String[] newGen, String[] currGen) {
-
-		this.sendQueue = send;
-		this.receiveQueue = receive;
+		this.threadIds = threadIds;
+		this.threadIds.add(this.getId());
+		
+		this.workerQueue = new ArrayBlockingQueue<Long>(numThreads);
+		this.lookup = lookup;
+		this.lookup.put(this.getId(), this.workerQueue);
 		
 		this.firstRow = firstRow;
 		this.lastRow = lastRow;
@@ -52,8 +58,14 @@ public class GameOfLifeThread extends Thread {
 	void synchronize () {
 		try {
 			// Sends flag to the other thread to indicate it's done w/ generation
-			this.sendQueue.put(this.doneFlag);
-			this.receiveQueue.take();
+			for(Long id : this.threadIds) {
+				lookup.get(id).put(this.getId());
+			}
+			ArrayList<Long> remainingIds = new ArrayList<Long>(this.threadIds);
+			while(!remainingIds.isEmpty()) {
+				Long id = workerQueue.take();
+				remainingIds.remove(id);
+			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}

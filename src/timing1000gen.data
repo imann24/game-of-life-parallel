@@ -1,0 +1,88 @@
+..................................... with 2 threads
+real	0m1.792s
+real	0m1.738s
+real	0m1.748s
+real	0m1.747s
+real	0m1.747s
+real	0m1.737s
+real	0m1.770s
+real	0m1.771s
+real	0m1.759s
+real	0m1.756s
+..................................... with 4 threads
+real	0m1.831s
+real	0m1.884s
+real	0m1.879s
+real	0m1.833s
+real	0m1.869s
+real	0m1.830s
+real	0m1.821s
+real	0m1.835s
+real	0m1.848s
+real	0m1.908s
+..................................... with 8 threads
+real	0m1.956s
+real	0m1.986s
+real	0m2.020s
+real	0m1.942s
+real	0m2.029s
+real	0m2.207s
+real	0m2.300s
+real	0m2.008s
+real	0m1.990s
+real	0m2.040s
+..................................... with 12 threads
+real	0m2.343s
+real	0m2.157s
+real	0m2.168s
+real	0m2.147s
+real	0m2.183s
+real	0m2.518s
+real	0m2.098s
+real	0m2.216s
+real	0m2.115s
+real	0m2.151s
+..................................... with 16 threads
+real	0m2.151s
+real	0m2.181s
+real	0m2.263s
+real	0m2.370s
+real	0m2.229s
+real	0m2.292s
+real	0m2.323s
+real	0m2.328s
+real	0m2.285s
+real	0m2.282s
+..................................... with 20 threads
+real	0m2.305s
+real	0m2.256s
+real	0m2.300s
+real	0m2.276s
+real	0m2.325s
+real	0m2.432s
+real	0m2.384s
+real	0m2.449s
+real	0m2.408s
+real	0m2.189s
+..................................... with 32 threads
+real	0m2.685s
+real	0m2.593s
+real	0m3.062s
+real	0m2.620s
+real	0m2.874s
+real	0m2.717s
+real	0m2.749s
+real	0m2.994s
+real	0m2.540s
+real	0m2.792s
+..................................... with 64 threads
+real	0m5.060s
+real	0m5.830s
+real	0m5.834s
+real	0m5.840s
+real	0m5.148s
+real	0m7.105s
+real	0m5.461s
+real	0m5.824s
+real	0m5.219s
+real	0m6.103s

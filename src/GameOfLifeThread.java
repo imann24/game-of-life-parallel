@@ -3,31 +3,48 @@
  * Description: A single thread to work on the blocking queues
  */
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 public class GameOfLifeThread extends Thread {
+	// A shared list of all thread ids
+	ArrayList<Long> threadIds;
 	
-	BlockingQueue<Integer> sendQueue;
-	BlockingQueue<Integer> receiveQueue;
+	// A shared lookup for each thread's 
+	HashMap<Long, BlockingQueue<Long>> lookup;
 	
+	// This threads blocking queue (which it uses to sync work with other threads)
+	BlockingQueue<Long> workerQueue;
+	
+	// The rows the thread is responsible for calculating
 	int firstRow;
 	int lastRow;
+	
+	// How many generations the program should run for (shared between all threads)
 	int numGen;
 	
-	// used by threads to communicate when they are done with each other
-	final int doneFlag = GameOfLifeData.DONE_FLAG; 
-	
+	// These pointer are swapped to prevent additional memory overhead of allocating new String[] vars
 	String[] newGen;
 	String[] currGen;
 	
+	// Raise this flag to halt the operations within the run loop
+	boolean killFlag = false;
+	
 	public GameOfLifeThread(
-			BlockingQueue<Integer> send,
-			BlockingQueue<Integer> receive,
+			int numThreads, ArrayList<Long> threadIds,
+			HashMap<Long, BlockingQueue<Long>> lookup,
 			int firstRow, int lastRow, int numGen,
 			String[] newGen, String[] currGen) {
-
-		this.sendQueue = send;
-		this.receiveQueue = receive;
+		// Tracks its own id in the list
+		this.threadIds = threadIds;
+		this.threadIds.add(this.getId());
+		
+		// Tracks its queue in the list associated with its id
+		this.workerQueue = new ArrayBlockingQueue<Long>(numThreads);
+		this.lookup = lookup;
+		this.lookup.put(this.getId(), this.workerQueue);
 		
 		this.firstRow = firstRow;
 		this.lastRow = lastRow;
@@ -40,6 +57,11 @@ public class GameOfLifeThread extends Thread {
 	@Override
 	public void run() {
 		for(int i = 0; i < this.numGen; i++) {
+			// Check if the manager thread has ended
+			if(killFlag) {
+				break;
+			}
+			// Runs the calculations based on the current generation
 			calculateNextGeneration();
 			// Sync calculating generations
 			synchronize();
@@ -47,15 +69,49 @@ public class GameOfLifeThread extends Thread {
 			// Sync swapping references to arrays (updated to new generation)
 			synchronize();
 		}
+		cleanup();
 	}
 
+	// Public mutator to set the killFlag, which effectively ends the run() method
+	public void kill() {
+		this.killFlag = true;
+		interrupt();
+	}
+	
+	// A universal indicator of whether this thread is still actively involved in calculations
+	void cleanup () {
+		this.threadIds.remove(getId());
+		this.lookup.remove(getId());
+	}
+	
 	void synchronize () {
+		// Need to check for killFlag before each blocking call to avoid deadlock
+		if(killFlag) {
+			return;
+		}
 		try {
 			// Sends flag to the other thread to indicate it's done w/ generation
-			this.sendQueue.put(this.doneFlag);
-			this.receiveQueue.take();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+			for(Long id : this.threadIds) {
+				if(!lookup.get(id).contains(this.getId())) {
+					if(killFlag) {
+						return;
+					}
+					// Adds its id to the blocking queue for each thread (including its own)
+					lookup.get(id).put(this.getId());
+				}
+			}
+			int flagsReceived = 0;
+			// Check threadIds.size() each time in case a thread finishes during this method's execution 
+			while(flagsReceived < this.threadIds.size()) {
+				if(killFlag) {
+					return;
+				}
+				// Removes the the thread ids until its removed one id for every live thread
+				workerQueue.take();
+				flagsReceived++;
+			}
+		} catch(Exception e) {
+			cleanup();
 		}
 	}
 	
